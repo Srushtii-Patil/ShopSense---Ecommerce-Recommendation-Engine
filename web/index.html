@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ShopSense - Personalized E-commerce Recommendation Engine and Dynamic Cart Suggestions using Java, JDBC, and MySQL.">
+    <title>ShopSense | Intelligent Recommendation Engine & Cart Advisor</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛍️</text></svg>">
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <header class="navbar">
+        <a href="#" class="brand">
+            <div class="brand-icon">🛍️</div>
+            <div class="brand-title">ShopSense</div>
+            <span class="brand-tag">AI Powered</span>
+        </a>
+
+        <div class="nav-actions">
+            <!-- Active User Profile Selector -->
+            <div class="user-selector-wrap">
+                <span class="user-selector-label">Customer Profile:</span>
+                <select id="userSelector" class="user-select" title="Switch User Profile">
+                    <!-- Populated dynamically via app.js -->
+                </select>
+            </div>
+
+            <!-- Database Connection Status Badge -->
+            <div id="dbBadge" class="db-badge" title="Click to view database connection status">
+                <div class="db-dot"></div>
+                <span id="dbModeText">Database: Connecting...</span>
+            </div>
+
+            <!-- Shopping Cart Drawer Trigger -->
+            <button id="cartToggleBtn" class="cart-btn" aria-label="View Shopping Cart">
+                <span>🛒 Cart</span>
+                <span id="cartCountBadge" class="cart-count">0</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Hero / Profile & Budget Control Strip -->
+    <section class="profile-strip">
+        <div class="profile-card">
+            <!-- User Identity -->
+            <div class="user-identity">
+                <div id="userAvatar" class="user-avatar">AC</div>
+                <div class="user-info">
+                    <h2>
+                        <span id="userName">Alex Chen</span>
+                        <span id="userTierBadge" class="tier-badge tier-PREMIUM">PREMIUM</span>
+                    </h2>
+                    <p id="userEmail" class="user-email">alex.chen@techmail.com</p>
+                    <div id="userPrefsTags" class="preferences-tags">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real-time Budget Slider & Progress Meter -->
+            <div class="budget-meter-wrap">
+                <div class="budget-header">
+                    <span class="budget-title">Budget Allocation & Headroom</span>
+                    <span class="budget-stats">
+                        <span id="budgetRemainingDisplay" class="budget-remaining">$1,100.01 left</span>
+                        <span style="color: var(--text-muted); font-size: 0.85rem;"> / </span>
+                        <span id="budgetAllocatedDisplay" class="budget-allocated">$1,200.00</span>
+                    </span>
+                </div>
+
+                <div class="budget-progress-bar">
+                    <div id="progressSpent" class="progress-spent" style="width: 8%;"></div>
+                    <div id="progressRemaining" class="progress-remaining" style="width: 92%;"></div>
+                </div>
+
+                <div class="budget-slider-row">
+                    <span style="font-size: 0.75rem; color: var(--text-muted);">$50</span>
+                    <input type="range" id="budgetSlider" class="budget-slider" min="50" max="3000" step="25" value="1200">
+                    <span style="font-size: 0.75rem; color: var(--text-muted);">$3,000</span>
+                    <span id="sliderValueTag" class="slider-val-tag">$1,200</span>
+                </div>
+            </div>
+
+            <!-- Actions: Order History & Edit Preferences -->
+            <div class="profile-actions">
+                <button id="viewHistoryBtn" class="btn-secondary">
+                    <span>📜</span> Purchase History
+                </button>
+                <button id="editPrefsBtn" class="btn-secondary">
+                    <span>⚙️</span> Edit Preferences
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content Area -->
+    <main class="main-container">
+
+        <!-- Left Column: Personalized Product Recommendations -->
+        <section class="recommendations-section">
+            <div class="section-header">
+                <div class="section-title-wrap">
+                    <h3>Personalized Recommendations</h3>
+                    <p class="section-subtitle">Ranked by collaborative filtering, category affinity, brand loyalty, and budget fitness.</p>
+                </div>
+            </div>
+
+            <!-- Filter Chips & Sorting Bar -->
+            <div class="controls-bar">
+                <button class="filter-chip active" data-category="ALL">All Items</button>
+                <button class="filter-chip" data-category="Laptops">Laptops</button>
+                <button class="filter-chip" data-category="Audio">Audio</button>
+                <button class="filter-chip" data-category="Accessories">Accessories</button>
+                <button class="filter-chip" data-category="Smart Home">Smart Home</button>
+                <button class="filter-chip" data-category="Gaming">Gaming</button>
+
+                <select id="sortSelect" class="sort-select" title="Sort recommendations">
+                    <option value="score">Sort: Highest Match Score</option>
+                    <option value="price-asc">Sort: Price (Low to High)</option>
+                    <option value="price-desc">Sort: Price (High to Low)</option>
+                    <option value="rating">Sort: Top Customer Rated</option>
+                </select>
+            </div>
+
+            <!-- Recommendations Grid -->
+            <div id="recommendationsGrid" class="products-grid">
+                <!-- Populated dynamically via app.js -->
+            </div>
+        </section>
+
+        <!-- Right Column: Active Cart & Dynamic Suggestions -->
+        <aside class="sidebar-panel">
+
+            <!-- Active Shopping Cart Widget -->
+            <div class="cart-widget">
+                <div class="cart-widget-header">
+                    <h4 class="cart-widget-title">
+                        <span>🛒</span> Active Cart
+                    </h4>
+                    <button id="clearCartBtn" class="btn-secondary" style="padding: 2px 8px; font-size: 0.75rem;">Clear</button>
+                </div>
+
+                <!-- Cart Items List -->
+                <div id="cartItemsList" class="cart-items-list">
+                    <!-- Populated dynamically by app.js -->
+                </div>
+
+                <!-- Free Shipping Progress Tracker -->
+                <div class="shipping-booster">
+                    <div class="shipping-booster-header">
+                        <span id="shippingGoalText">Add $0.01 for FREE Shipping!</span>
+                        <span id="shippingPercentText">99%</span>
+                    </div>
+                    <div class="shipping-bar-wrap">
+                        <div id="shippingBarFill" class="shipping-bar-fill" style="width: 99%;"></div>
+                    </div>
+                </div>
+
+                <!-- Cart Financial Summary -->
+                <div class="cart-summary">
+                    <div class="summary-row">
+                        <span>Subtotal:</span>
+                        <span id="cartSubtotalVal">$99.99</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Estimated Tax (8%):</span>
+                        <span id="cartTaxVal">$8.00</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Remaining Budget:</span>
+                        <span id="cartRemainingBudgetVal" style="color: #34d399; font-weight: 700;">$1,100.01</span>
+                    </div>
+                    <div class="summary-row summary-total">
+                        <span>Total:</span>
+                        <span id="cartTotalVal">$107.99</span>
+                    </div>
+                </div>
+
+                <button id="checkoutBtn" class="btn-checkout" style="width: 100%;">
+                    ⚡ Complete Order & Update AI
+                </button>
+            </div>
+
+            <!-- Dynamic Cart Suggestions & Budget Add-ons -->
+            <div class="suggestions-widget">
+                <h4 class="sugg-widget-title">
+                    <span>💡</span> Dynamic Cart Suggestions
+                </h4>
+                <p class="sugg-widget-desc">Real-time cross-sells, frequently bought together pairings & budget maximizers.</p>
+
+                <div id="suggestionsList" class="sugg-list">
+                    <!-- Populated dynamically by app.js -->
+                </div>
+            </div>
+
+        </aside>
+    </main>
+
+    <!-- MODAL: Order & Purchase History -->
+    <div id="historyModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 class="modal-title">📜 User Purchase History</h3>
+                <button class="modal-close" onclick="closeModal('historyModal')">&times;</button>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+                Historical purchases train ShopSense's collaborative filtering engine to discover complementary add-ons and suppress repeat durables.
+            </p>
+            <div id="historyTimeline" class="history-timeline">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Edit Customer Preferences -->
+    <div id="prefsModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 class="modal-title">⚙️ Customer Preferences & Budget</h3>
+                <button class="modal-close" onclick="closeModal('prefsModal')">&times;</button>
+            </div>
+            <form id="prefsForm" style="display: flex; flex-direction: column; gap: 1rem;">
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem;">Total Budget ($)</label>
+                    <input type="number" id="prefBudgetInput" style="width: 100%; padding: 0.6rem; background: var(--bg-card); border: 1px solid var(--border-color); color: white; border-radius: 8px;" step="10">
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem;">Preferred Categories (comma-separated)</label>
+                    <input type="text" id="prefCategoriesInput" style="width: 100%; padding: 0.6rem; background: var(--bg-card); border: 1px solid var(--border-color); color: white; border-radius: 8px;">
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem;">Preferred Brands (comma-separated)</label>
+                    <input type="text" id="prefBrandsInput" style="width: 100%; padding: 0.6rem; background: var(--bg-card); border: 1px solid var(--border-color); color: white; border-radius: 8px;">
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem;">Price Sensitivity Tier</label>
+                    <select id="prefTierSelect" style="width: 100%; padding: 0.6rem; background: var(--bg-card); border: 1px solid var(--border-color); color: white; border-radius: 8px;">
+                        <option value="BUDGET">BUDGET (Prioritizes highest value-to-cost ratio)</option>
+                        <option value="BALANCED">BALANCED (Harmonious balance of quality and budget)</option>
+                        <option value="PREMIUM">PREMIUM (Prioritizes flagship specs & luxury brands)</option>
+                    </select>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1rem;">
+                    <button type="button" class="btn-secondary" onclick="closeModal('prefsModal')">Cancel</button>
+                    <button type="submit" class="btn-checkout" style="padding: 0.6rem 1.5rem; margin: 0;">Save Preferences</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Database Diagnostics & MySQL Settings -->
+    <div id="dbModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 class="modal-title">🗄️ Database Connection Diagnostics</h3>
+                <button class="modal-close" onclick="closeModal('dbModal')">&times;</button>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; margin-bottom: 1.25rem;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span style="color: var(--text-muted);">Active Engine:</span>
+                    <strong id="modalDbMode" style="color: #34d399;">EMBEDDED (H2 MySQL-Mode)</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span style="color: var(--text-muted);">JDBC Target:</span>
+                    <span id="modalDbUrl" style="font-family: monospace; font-size: 0.75rem; color: #cbd5e1; word-break: break-all;">jdbc:h2:./data/shopsense...</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--text-muted);">HTTP Web Port:</span>
+                    <strong id="modalDbPort">8080</strong>
+                </div>
+            </div>
+
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                ShopSense connects to MySQL 8.x / 9.x via official JDBC Connector/J. If MySQL credentials are not yet configured in <code style="color: #a5b4fc;">db.properties</code>, the engine seamlessly utilizes embedded MySQL-compatible storage.
+            </p>
+
+            <button type="button" class="btn-secondary" style="width: 100%;" onclick="closeModal('dbModal')">Close Diagnostics</button>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
